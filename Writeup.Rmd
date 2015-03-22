@@ -1,0 +1,64 @@
+---
+title: "PML Project"
+author: "tameemmd"
+date: "Sunday, March 22, 2015"
+output: html_document
+---
+
+#Executive Summary
+
+In this report we'll develop an algorithm to classify the way an exercise is made by using accelerometer variables as predictors. We develop one model based in knn . The accuracy is 96%.
+
+
+##Reading data and loading libraries
+
+First we'll read the test and training data. We have to make a validation partition from the training data.
+
+```{r}
+library(caret)
+traindata<-read.csv("pml-training.csv")
+inTrain <- createDataPartition( traindata$classe, p=0.65, list=FALSE);
+training <- traindata[ inTrain,];
+validation <- traindata[ -inTrain,];
+testdata<-read.csv("pml-testing.csv")
+```
+
+Now, we'll look at the data we have read. As we don't know how many predictors we have, we'll first make a count of columns.
+
+```{r}
+length(names(traindata))
+```
+
+
+We notice a high number of predictors, so we could use a way to reduce them.
+
+
+#Cleaning data
+
+An out-of-the-hat way is to remove all the columns that have NAs and blank strings.
+
+```{r}
+training2 <- training[,  !apply( is.na(training), 2,any)]
+training2 <- training2[, !apply( training2=="",   2,any)]
+length(names(training2))
+```
+
+#Models creation & Accuracy
+
+We have now 60 predictors, so we'll try to use them to fit a model. We'll start using the knn method, to determine the closest neighbors of the each prediction classes. We'll make a preprocessing with pca.
+
+```{r}
+model1<-train(classe~.,data=training2, method = "knn",preProcess="pca")
+```
+
+We'll now use our model to predict the classes of our test data, to calculate the
+sample error.
+
+```{r}
+confusionMatrix( predict( model1, validation ), validation$classe );
+```
+
+
+#Conclusion
+
+We have demonstrated that the knn method works well for this classification problem.We achieve about 96% accuracy in our prediction. While it is possible to build other types of models, targeting to improve accuracy beyond the point reached here could be a mistake resulting in over fitting the data.
